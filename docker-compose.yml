@@ -1,6 +1,7 @@
 services:
   nginx:
     image: nginx
+    restart: always
     ports:
       - "80:80"
     volumes:
@@ -20,6 +21,7 @@ services:
 
   db:
     image: mongo:8.0.11
+    restart: always
     ports:
       - "27017:27017"
     volumes:

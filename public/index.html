@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Items</title>
+</head>
+<body>
+  <h1>Items</h1>
+
+  <input id="nameInput" placeholder="Item name" />
+  <button onclick="addItem()">Add</button>
+
+  <ul id="itemList"></ul>
+
+  <script>
+    async function loadItems() {
+      const res = await fetch('/api/items');
+      const items = await res.json();
+
+      const list = document.getElementById('itemList');
+      list.innerHTML = '';
+
+      items.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item.name + ' ';
+
+        const editBtn = document.createElement('button');
+        editBtn.textContent = 'Edit';
+        editBtn.onclick = () => editItem(item._id, item.name);
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = 'Delete';
+        deleteBtn.onclick = () => deleteItem(item._id);
+
+        li.appendChild(editBtn);
+        li.appendChild(deleteBtn);
+        list.appendChild(li);
+      });
+    }
+
+    async function addItem() {
+      const name = document.getElementById('nameInput').value;
+      await fetch('/api/items', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+      });
+      document.getElementById('nameInput').value = '';
+      loadItems();
+    }
+
+    async function editItem(id, oldName) {
+      const newName = prompt('Edit item:', oldName);
+      if (newName === null) return;
+      await fetch('/api/items/' + id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName })
+      });
+      loadItems();
+    }
+
+    async function deleteItem(id) {
+      await fetch('/api/items/' + id, { method: 'DELETE' });
+      loadItems();
+    }
+
+    loadItems();
+  </script>
+</body>
+</html>

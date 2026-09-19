@@ -1,5 +1,5 @@
 const express = require('express');
-const { MongoClient } = require('mongodb');
+const { MongoClient, ObjectId } = require('mongodb');
 
 const app = express();
 app.use(express.json());
@@ -25,16 +25,31 @@ async function connectWithRetry() {
 
 connectWithRetry();
 
-app.get('/', async (req, res) => {
+app.get('/api/items', async (req, res) => {
   if (!db) return res.status(503).json({ message: 'DB not ready yet' });
   const items = await db.collection('items').find().toArray();
   res.json(items);
 });
 
-app.post('/add', async (req, res) => {
+app.post('/api/items', async (req, res) => {
   if (!db) return res.status(503).json({ message: 'DB not ready yet' });
-  await db.collection('items').insertOne(req.body);
-  res.json({ message: 'Added!' });
+  const result = await db.collection('items').insertOne(req.body);
+  res.json({ message: 'Added!', id: result.insertedId });
+});
+
+app.put('/api/items/:id', async (req, res) => {
+  if (!db) return res.status(503).json({ message: 'DB not ready yet' });
+  await db.collection('items').updateOne(
+    { _id: new ObjectId(req.params.id) },
+    { $set: req.body }
+  );
+  res.json({ message: 'Updated!' });
+});
+
+app.delete('/api/items/:id', async (req, res) => {
+  if (!db) return res.status(503).json({ message: 'DB not ready yet' });
+  await db.collection('items').deleteOne({ _id: new ObjectId(req.params.id) });
+  res.json({ message: 'Deleted!' });
 });
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
